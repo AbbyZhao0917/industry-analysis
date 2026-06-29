@@ -18,7 +18,11 @@ def get_client() -> anthropic.Anthropic:
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError("未设置 ANTHROPIC_API_KEY，请在 .env 文件中配置")
-        _client = anthropic.Anthropic(api_key=api_key)
+        base_url = os.getenv("ANTHROPIC_BASE_URL")
+        if base_url:
+            _client = anthropic.Anthropic(api_key=api_key, base_url=base_url)
+        else:
+            _client = anthropic.Anthropic(api_key=api_key)
     return _client
 
 
