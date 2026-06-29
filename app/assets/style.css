@@ -107,8 +107,23 @@ h1 {
     font-size: 14px;
 }
 
-/* Sidebar navigation — hide default page list */
+/* Sidebar navigation — style to match design system */
 [data-testid="stSidebarNav"] {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+}
+
+[data-testid="stSidebarNav"] a {
+    color: #2C3338 !important;
+    text-decoration: none;
+}
+
+[data-testid="stSidebarNav"] a:hover {
+    color: #2D5A4B !important;
+}
+
+/* Hide the default "Navigation" label in sidebar */
+[data-testid="stSidebarNav"] > span {
     display: none;
 }
 

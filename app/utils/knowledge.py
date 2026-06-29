@@ -3,16 +3,17 @@
 """
 
 import os
+from typing import Dict, List
 
 _KB_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "knowledge-base")
-_cache: dict[str, str] = {}
+_cache: Dict[str, str] = {}
 
 
 def get_kb_dir() -> str:
     return os.path.abspath(_KB_DIR)
 
 
-def list_knowledge_files() -> list[str]:
+def list_knowledge_files() -> List[str]:
     """列出所有知识库文件名（不含扩展名）"""
     files = []
     kb_dir = get_kb_dir()
@@ -38,7 +39,7 @@ def load_knowledge(name: str) -> str:
     return content
 
 
-def load_all_knowledge() -> dict[str, str]:
+def load_all_knowledge() -> Dict[str, str]:
     """加载全部知识库文件"""
     result = {}
     for name in list_knowledge_files():
@@ -46,7 +47,7 @@ def load_all_knowledge() -> dict[str, str]:
     return result
 
 
-def build_system_context(kb_names: list[str]) -> str:
+def build_system_context(kb_names: List[str]) -> str:
     """将指定知识库文件拼接为系统提示上下文"""
     parts = [
         "## 方法论知识库\n",

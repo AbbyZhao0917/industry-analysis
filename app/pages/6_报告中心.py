@@ -4,6 +4,7 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+import markdown
 import streamlit as st
 from app.utils.style import inject_css
 
@@ -47,7 +48,8 @@ if os.path.isdir(reports_dir):
             preview = content[:200].strip().replace("\n", " ") + "..."
 
             with st.expander(title):
-                st.markdown(content)
+                html_body = markdown.markdown(content, extensions=['tables', 'fenced_code'])
+                st.markdown(html_body, unsafe_allow_html=True)
 else:
     st.markdown(
         '<div class="card" style="text-align: center; padding: 48px 24px;">'

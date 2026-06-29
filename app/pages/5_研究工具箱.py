@@ -4,6 +4,7 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+import markdown
 import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
@@ -67,6 +68,7 @@ if start_btn and research_question:
     with st.spinner("正在生成研究方案..."):
         try:
             response = ask_claude(system_prompt, f"请为「{research_question}」提供研究方案")
+            html_body = markdown.markdown(response, extensions=['tables', 'fenced_code'])
 
             st.markdown(f"""
             <div class="report-container">
@@ -75,7 +77,7 @@ if start_btn and research_question:
                     <div class="report-meta">研究问题：{research_question}</div>
                 </div>
                 <div class="report-body">
-                    {response}
+                    {html_body}
                 </div>
             </div>
             """, unsafe_allow_html=True)

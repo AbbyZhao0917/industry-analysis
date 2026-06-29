@@ -4,6 +4,7 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+import markdown
 import streamlit as st
 from app.utils.knowledge import list_knowledge_files, load_knowledge
 from app.utils.style import inject_css
@@ -57,6 +58,7 @@ else:
         content = load_knowledge(selected)
         if content:
             module_title = title_map.get(selected, selected)
+            html_body = markdown.markdown(content, extensions=['tables', 'fenced_code'])
             st.markdown(f"""
             <div class="report-container">
                 <div class="report-header">
@@ -64,7 +66,7 @@ else:
                     <div class="report-meta">知识库模块 &middot; 方法论来源：肖璟 (2025)</div>
                 </div>
                 <div class="report-body">
-                    {content}
+                    {html_body}
                 </div>
             </div>
             """, unsafe_allow_html=True)

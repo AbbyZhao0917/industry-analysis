@@ -4,6 +4,7 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+import markdown
 import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
@@ -61,6 +62,7 @@ if start_btn and company_a and company_b:
     with st.spinner(f"正在检索「{company_a}」与「{company_b}」公开数据并执行对比分析..."):
         try:
             response = ask_claude(system_prompt, f"请对比分析「{company_a}」和「{company_b}」两家企业")
+            html_body = markdown.markdown(response, extensions=['tables', 'fenced_code'])
 
             st.markdown(f"""
             <div class="report-container">
@@ -72,7 +74,7 @@ if start_btn and company_a and company_b:
                     </div>
                 </div>
                 <div class="report-body">
-                    {response}
+                    {html_body}
                 </div>
             </div>
             """, unsafe_allow_html=True)

@@ -3,6 +3,7 @@
 """
 import sys
 import os
+import markdown
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -75,6 +76,7 @@ if start_btn and industry_name:
         try:
             response = ask_claude(system_prompt, f"请分析「{industry_name}」行业")
 
+            html_body = markdown.markdown(response, extensions=['tables', 'fenced_code'])
             st.markdown(f"""
             <div class="report-container">
                 <div class="report-header">
@@ -85,7 +87,7 @@ if start_btn and industry_name:
                     </div>
                 </div>
                 <div class="report-body">
-                    {response}
+                    {html_body}
                 </div>
             </div>
             """, unsafe_allow_html=True)

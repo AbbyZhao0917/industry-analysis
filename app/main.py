@@ -29,41 +29,6 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("""
-    <div class="sidebar-kb-title">分析模块</div>
-    <div class="sidebar-kb-list">
-    行业分析<br>
-    企业分析<br>
-    企业对比<br>
-    行业对比<br>
-    研究工具箱<br>
-    报告中心<br>
-    知识库
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.divider()
-
-    st.markdown("""
-    <div class="sidebar-kb-title">知识库</div>
-    <div class="sidebar-kb-list">
-    产业生命周期<br>
-    商业模式画布<br>
-    护城河框架<br>
-    竞争分析<br>
-    市场测算<br>
-    PEST 分析<br>
-    估值方法<br>
-    景气度追踪<br>
-    研究料理法<br>
-    数据来源<br>
-    AI 研究指南<br>
-    术语表
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.divider()
-
     st.markdown(
         '<div style="font-size: 12px; color: #9CA3AF; margin-top: 8px;">'
         '方法论来源：肖璟《如何快速了解一个行业》<br>'
