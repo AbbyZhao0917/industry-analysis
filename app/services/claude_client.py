@@ -34,5 +34,6 @@ def ask_claude(system_prompt: str, user_message: str, max_tokens: int = 8000) ->
         max_tokens=max_tokens,
         system=system_prompt,
         messages=[{"role": "user", "content": user_message}],
+        thinking={"type": "disabled"},
     )
     return message.content[0].text

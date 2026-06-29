@@ -1,7 +1,6 @@
 """
-行业分析工作台 —— 基于七维度框架的行业分析
+行业分析 —— 七维度框架 · 结构化研究报告
 """
-
 import sys
 import os
 
@@ -10,39 +9,47 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
+from app.utils.style import inject_css
 
-st.set_page_config(page_title="行业分析", page_icon="📊", layout="wide")
+st.set_page_config(page_title="行业分析 · 经纬", page_icon="◈", layout="wide")
 
-st.title("📊 行业分析工作台")
-st.caption("基于肖璟《如何快速了解一个行业》七维度框架 · 数据来源标注URL")
+inject_css()
+
+st.markdown(
+    '<div class="page-title-section">'
+    '<h1 style="margin-bottom: 4px;">行业分析</h1>'
+    '<div class="page-subtitle">'
+    '按七维度框架输出结构化研究报告 &middot; 数据来源标注 URL'
+    '</div>'
+    '</div>',
+    unsafe_allow_html=True,
+)
 
 # ---- 输入区 ----
+st.markdown('<div class="card">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
     industry_name = st.text_input(
         "输入行业名称",
         placeholder="例如：预制菜、便利店、CPO、新能源车、银发经济...",
+        label_visibility="collapsed",
     )
 with col2:
-    analysis_depth = st.selectbox("分析深度", ["标准（3000-5000字）", "精简（1500字）", "深度（8000字+）"])
+    analysis_depth = st.selectbox(
+        "分析深度",
+        ["标准（3000-5000字）", "精简（1500字）", "深度（8000字+）"],
+        label_visibility="collapsed",
+    )
 with col3:
-    st.markdown("<br>", unsafe_allow_html=True)
-    start_btn = st.button("🔍 开始分析", type="primary", use_container_width=True)
+    start_btn = st.button("开始分析", type="primary", use_container_width=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-# ---- 分析过程 ----
+# ---- 分析执行 ----
 if start_btn and industry_name:
-    # 构建系统提示词（加载知识库）
     kb_names = [
-        "industry-lifecycle",
-        "business-model-canvas",
-        "market-sizing",
-        "moat-framework",
-        "competitive-analysis",
-        "valuation-guide",
-        "pest-framework",
-        "prosperity-tracking",
-        "research-cookbook",
-        "data-sources",
+        "industry-lifecycle", "business-model-canvas", "market-sizing",
+        "moat-framework", "competitive-analysis", "valuation-guide",
+        "pest-framework", "prosperity-tracking", "research-cookbook", "data-sources",
     ]
     system_prompt = build_system_context(kb_names)
     system_prompt += f"""
@@ -64,35 +71,80 @@ if start_btn and industry_name:
 - 优先使用书中推荐的资源：国家统计局、行业协会官网、券商研报、专业数据库、公司招股书/年报
 """
 
-    with st.spinner(f"正在分析「{industry_name}」行业..."):
-        with st.expander("📡 实时搜索与数据处理中...", expanded=True):
-            status_placeholder = st.empty()
-
-        # 调用 Claude
+    with st.spinner(f"正在检索「{industry_name}」行业公开数据并执行结构分析..."):
         try:
             response = ask_claude(system_prompt, f"请分析「{industry_name}」行业")
-            st.success(f"✅ 「{industry_name}」行业分析完成")
-            st.markdown(response)
+
+            st.markdown(f"""
+            <div class="report-container">
+                <div class="report-header">
+                    <div class="report-title">{industry_name} 行业研究报告</div>
+                    <div class="report-meta">
+                        分析框架：七维度 &middot; 分析深度：{analysis_depth} &middot;
+                        以下内容基于公开数据生成，仅供参考
+                    </div>
+                </div>
+                <div class="report-body">
+                    {response}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
         except Exception as e:
-            st.error(f"分析出错: {e}")
+            st.error(f"分析未能完成：{e}")
 
 elif start_btn and not industry_name:
-    st.warning("请输入行业名称")
+    st.markdown(
+        '<div class="card-accent" style="font-size: 14px; color: #6B7280;">请输入行业名称以开始分析</div>',
+        unsafe_allow_html=True,
+    )
 
-# ---- 空状态提示 ----
+# ---- 空状态 ----
 if not start_btn:
-    st.info("👆 输入行业名称，点击「开始分析」按钮")
     st.markdown("""
-    ### 分析内容预览
+    <div class="card-accent">
+        <div class="guide-text">
+            <strong>使用方式</strong><br>
+            输入行业名称，系统将自动检索最新公开数据，按七维度框架输出结构化研究报告。<br>
+            每条数据均标注来源 URL 与时间。
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    每次分析将覆盖以下七个维度：
-    1. **可行性** — 商业模式画布 + 对标法验证 + UE模型
-    2. **规模性** — TAM/SAM/SOM + 市场规模测算
-    3. **防守性** — 护城河9子项评分卡
-    4. **盈利性** — CRn集中度 + 五力模型 + 产业链利润分配
-    5. **估值** — 生命周期对应估值方法
-    6. **外部因素** — PEST四维分析 + 技术创新金字塔
-    7. **景气度** — 关键指标识别 + 当前景气度判断
-
-    *所有数据标注来源URL和时间 · 基于公开信息 · 不构成投资建议*
-    """)
+    st.markdown("""
+    <div class="card" style="margin-top: 16px;">
+        <div class="guide-text">
+            <strong>分析维度</strong>
+        </div>
+        <table style="width: 100%; margin-top: 12px; font-size: 14px; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; font-weight: 600; width: 25%;">可行性</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; color: #6B7280;">商业模式画布 + 对标法 + UE模型</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; font-weight: 600;">规模性</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; color: #6B7280;">TAM/SAM/SOM + 市场规模测算</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; font-weight: 600;">防守性</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; color: #6B7280;">护城河9子项评分卡</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; font-weight: 600;">盈利性</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; color: #6B7280;">CRn集中度 + 五力模型 + 产业链利润分配</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; font-weight: 600;">估值</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; color: #6B7280;">生命周期对应估值方法</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; font-weight: 600;">外部因素</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #E2E0DA; color: #6B7280;">PEST四维分析 + 技术创新金字塔</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; font-weight: 600;">景气度</td>
+                <td style="padding: 8px 0; color: #6B7280;">关键指标识别 + 当前景气度判断</td>
+            </tr>
+        </table>
+    </div>
+    """, unsafe_allow_html=True)

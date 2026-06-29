@@ -6,10 +6,10 @@ enableXsrfProtection = true
 
 [theme]
 base = "light"
-primaryColor = "#1a56db"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f3f4f6"
-textColor = "#1f2937"
+primaryColor = "#2D5A4B"
+backgroundColor = "#FAF9F7"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#2C3338"
 font = "sans serif"
 
 [browser]

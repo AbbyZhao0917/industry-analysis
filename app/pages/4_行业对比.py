@@ -1,37 +1,42 @@
 """
-行业对比工作台 —— 两个行业七维度并排对比
+行业对比 —— 双行业七维度并排分析
 """
-
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
+from app.utils.style import inject_css
 
-st.set_page_config(page_title="行业对比", page_icon="📈", layout="wide")
+st.set_page_config(page_title="行业对比 · 经纬", page_icon="◈", layout="wide")
 
-st.title("📈 行业对比工作台")
-st.caption("两个行业七维度并排对比 · 差异高亮 · 选择建议")
+inject_css()
 
+st.markdown(
+    '<div class="page-title-section">'
+    '<h1 style="margin-bottom: 4px;">行业对比</h1>'
+    '<div class="page-subtitle">两个行业七维度并排对比 &middot; 差异高亮 &middot; 选择建议</div>'
+    '</div>',
+    unsafe_allow_html=True,
+)
+
+# ---- 输入区 ----
+st.markdown('<div class="card">', unsafe_allow_html=True)
 col_a, col_b = st.columns(2)
 with col_a:
-    industry_a = st.text_input("行业 A", placeholder="例如：生鲜电商")
+    industry_a = st.text_input("行业 A", placeholder="例如：生鲜电商", label_visibility="collapsed")
 with col_b:
-    industry_b = st.text_input("行业 B", placeholder="例如：社区团购")
+    industry_b = st.text_input("行业 B", placeholder="例如：社区团购", label_visibility="collapsed")
+start_btn = st.button("开始对比", type="primary", use_container_width=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-start_btn = st.button("📈 开始对比", type="primary", use_container_width=True)
-
+# ---- 分析执行 ----
 if start_btn and industry_a and industry_b:
     kb_names = [
-        "industry-lifecycle",
-        "business-model-canvas",
-        "market-sizing",
-        "moat-framework",
-        "competitive-analysis",
-        "valuation-guide",
-        "pest-framework",
-        "prosperity-tracking",
+        "industry-lifecycle", "business-model-canvas", "market-sizing",
+        "moat-framework", "competitive-analysis", "valuation-guide",
+        "pest-framework", "prosperity-tracking",
     ]
     system_prompt = build_system_context(kb_names)
     system_prompt += f"""
@@ -51,16 +56,41 @@ if start_btn and industry_a and industry_b:
 每条数据必须标注具体来源URL和时间
 """
 
-    with st.spinner(f"正在对比「{industry_a}」vs「{industry_b}」..."):
+    with st.spinner(f"正在检索「{industry_a}」与「{industry_b}」行业公开数据并执行对比分析..."):
         try:
             response = ask_claude(system_prompt, f"请对比分析「{industry_a}」和「{industry_b}」两个行业")
-            st.success(f"✅ 对比完成")
-            st.markdown(response)
+
+            st.markdown(f"""
+            <div class="report-container">
+                <div class="report-header">
+                    <div class="report-title">{industry_a} vs {industry_b} &middot; 行业对比</div>
+                    <div class="report-meta">
+                        分析框架：七维度并排对比 &middot;
+                        以下内容基于公开数据生成，仅供参考
+                    </div>
+                </div>
+                <div class="report-body">
+                    {response}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
         except Exception as e:
-            st.error(f"分析出错: {e}")
+            st.error(f"分析未能完成：{e}")
 
 elif start_btn and not (industry_a and industry_b):
-    st.warning("请输入两个行业名称")
+    st.markdown(
+        '<div class="card-accent" style="font-size: 14px; color: #6B7280;">请输入两个行业名称以开始对比</div>',
+        unsafe_allow_html=True,
+    )
 
+# ---- 空状态 ----
 if not start_btn:
-    st.info("👆 输入两个行业名称，点击「开始对比」")
+    st.markdown("""
+    <div class="card-accent">
+        <div class="guide-text">
+            <strong>使用方式</strong><br>
+            输入两个行业名称，系统将自动检索最新公开数据，按七维度并排对比，输出差异分析与选择建议。
+        </div>
+    </div>
+    """, unsafe_allow_html=True)

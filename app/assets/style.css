@@ -1,0 +1,674 @@
+/* ============================================================
+   经纬（Jingwei）· 行业洞察平台 — 设计系统
+   调性：理性克制 · 石板灰+墨绿 · 咨询报告质感
+   签名元素：4px 左侧墨绿竖线
+   ============================================================ */
+
+/* --- Design Tokens ---
+   --color-accent:       #2D5A4B   墨绿
+   --color-accent-hover: #1F3D33   墨绿深色
+   --color-text:         #2C3338   石板灰
+   --color-text-muted:   #6B7280   暖灰
+   --color-surface:      #FAF9F7   雾面白
+   --color-card:         #FFFFFF   卡片白
+   --color-border:       #E2E0DA   岩灰
+   --font-display:       Georgia, "Noto Serif CJK SC", "Songti SC", serif
+   --font-body:          -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif
+   --font-mono:          "SF Mono", "Menlo", "Consolas", monospace
+   --radius:             6px
+*/
+
+/* ============================================================
+   1. GLOBAL PAGE
+   ============================================================ */
+
+.stApp {
+    background-color: #FAF9F7;
+}
+
+/* Hide default Streamlit header toolbar */
+[data-testid="stHeader"] {
+    display: none;
+}
+
+/* Hide default Streamlit hamburger menu spacer */
+[data-testid="stToolbar"] {
+    display: none;
+}
+
+/* ============================================================
+   2. TYPOGRAPHY
+   ============================================================ */
+
+/* All markdown text inherits body font by default */
+.stMarkdown {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #2C3338;
+}
+
+/* Page-level H1 */
+h1 {
+    font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif !important;
+    font-weight: 600 !important;
+    font-size: 28px !important;
+    color: #2C3338 !important;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px !important;
+}
+
+/* H2 in report body */
+.report-body h2 {
+    font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: #2C3338;
+    margin-top: 40px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E2E0DA;
+}
+
+/* H3 in report body */
+.report-body h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #2D5A4B;
+    margin-top: 28px;
+    margin-bottom: 12px;
+}
+
+/* H4 in report body */
+.report-body h4 {
+    font-weight: 600;
+    font-size: 15px;
+    color: #2C3338;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+/* Default paragraph in report */
+.report-body p {
+    font-size: 16px;
+    line-height: 1.85;
+    color: #2C3338;
+}
+
+/* ============================================================
+   3. SIDEBAR
+   ============================================================ */
+
+[data-testid="stSidebar"] {
+    background-color: #FAF9F7;
+    border-right: 1px solid #E2E0DA;
+}
+
+[data-testid="stSidebar"] .stMarkdown {
+    font-size: 14px;
+}
+
+/* Sidebar navigation — hide default page list */
+[data-testid="stSidebarNav"] {
+    display: none;
+}
+
+/* ============================================================
+   4. BUTTONS
+   ============================================================ */
+
+/* Primary button */
+.stButton > button {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 8px 20px;
+    border: none;
+    background-color: #2D5A4B;
+    color: #FFFFFF;
+    transition: background-color 0.15s ease;
+    letter-spacing: 0.01em;
+}
+
+.stButton > button:hover {
+    background-color: #1F3D33;
+    color: #FFFFFF;
+    border: none;
+}
+
+.stButton > button:active {
+    background-color: #1F3D33;
+    color: #FFFFFF;
+    border: none;
+}
+
+.stButton > button:focus {
+    box-shadow: 0 0 0 2px rgba(45, 90, 75, 0.25);
+    outline: none;
+}
+
+/* Secondary / non-primary buttons */
+.stButton > button[kind="secondary"] {
+    background-color: #FFFFFF;
+    color: #2C3338;
+    border: 1px solid #E2E0DA;
+}
+
+.stButton > button[kind="secondary"]:hover {
+    background-color: #FAF9F7;
+    border-color: #2D5A4B;
+    color: #2D5A4B;
+}
+
+/* ============================================================
+   5. INPUTS & SELECTS
+   ============================================================ */
+
+/* Text input */
+.stTextInput > div > input {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    color: #2C3338;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    padding: 10px 14px;
+    transition: border-color 0.15s ease;
+}
+
+.stTextInput > div > input:focus {
+    border-color: #2D5A4B;
+    box-shadow: 0 0 0 2px rgba(45, 90, 75, 0.12);
+    outline: none;
+}
+
+.stTextInput > div > input::placeholder {
+    color: #9CA3AF;
+}
+
+/* Text area */
+.stTextArea > div > textarea {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    color: #2C3338;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    padding: 10px 14px;
+    transition: border-color 0.15s ease;
+}
+
+.stTextArea > div > textarea:focus {
+    border-color: #2D5A4B;
+    box-shadow: 0 0 0 2px rgba(45, 90, 75, 0.12);
+    outline: none;
+}
+
+/* Select box */
+.stSelectbox > div > div {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    color: #2C3338;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+}
+
+/* ============================================================
+   6. DIVIDER
+   ============================================================ */
+
+hr, .stDivider {
+    border-color: #E2E0DA !important;
+}
+
+/* ============================================================
+   7. EXPANDER
+   ============================================================ */
+
+.stExpander {
+    border: 1px solid #E2E0DA !important;
+    border-radius: 6px !important;
+    background-color: #FFFFFF;
+}
+
+.stExpander > div[role="button"] {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-weight: 500;
+    color: #2C3338;
+}
+
+.stExpander > div[role="button"]:hover {
+    color: #2D5A4B;
+}
+
+/* ============================================================
+   8. ALERTS (info / success / warning / error)
+   Replace emoji-heavy defaults with quiet accent-left style
+   ============================================================ */
+
+.stAlert {
+    border-radius: 6px !important;
+    border: 1px solid #E2E0DA !important;
+    border-left: 4px solid #2D5A4B !important;
+    background-color: #FAF9F7 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    color: #2C3338;
+    padding: 14px 18px !important;
+}
+
+.stAlert [data-testid="stMarkdownContainer"] {
+    color: #2C3338;
+}
+
+/* Remove emoji-size inflation in alerts */
+.stAlert svg {
+    display: none;
+}
+
+/* ============================================================
+   9. REPORT CONTAINER (signature element)
+   Left 4px accent line + constrained width for ideal reading
+   ============================================================ */
+
+.report-container {
+    background: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-left: 4px solid #2D5A4B;
+    border-radius: 6px;
+    padding: 40px 48px;
+    max-width: 900px;
+    margin: 24px auto;
+}
+
+.report-header {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #E2E0DA;
+}
+
+.report-title {
+    font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #2C3338;
+    margin: 0 0 8px 0;
+}
+
+.report-meta {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+    color: #6B7280;
+}
+
+.report-body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    color: #2C3338;
+}
+
+/* --- Report internal table --- */
+.report-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+}
+
+.report-body th {
+    background: #FAF9F7;
+    border-bottom: 2px solid #E2E0DA;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #2C3338;
+}
+
+.report-body td {
+    border-bottom: 1px solid #E2E0DA;
+    padding: 10px 14px;
+    color: #2C3338;
+    vertical-align: top;
+}
+
+.report-body tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Report internal blockquote --- */
+.report-body blockquote {
+    border-left: 3px solid #2D5A4B;
+    background: #FAF9F7;
+    padding: 12px 16px;
+    margin: 16px 0;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+/* --- Report internal code / inline code --- */
+.report-body code {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 13px;
+    background: #F3F2EF;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #2D5A4B;
+}
+
+.report-body pre {
+    background: #FAF9F7;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 13px;
+}
+
+/* --- Report internal lists --- */
+.report-body ul, .report-body ol {
+    padding-left: 24px;
+    margin: 12px 0;
+}
+
+.report-body li {
+    margin-bottom: 6px;
+    line-height: 1.75;
+}
+
+/* --- Report internal links --- */
+.report-body a {
+    color: #2D5A4B;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease;
+}
+
+.report-body a:hover {
+    border-bottom-color: #2D5A4B;
+}
+
+/* --- Report internal horizontal rules --- */
+.report-body hr {
+    border: none;
+    border-top: 1px solid #E2E0DA;
+    margin: 28px 0;
+}
+
+/* --- Report internal strong --- */
+.report-body strong {
+    font-weight: 600;
+    color: #2C3338;
+}
+
+/* ============================================================
+   10. REPORT TOOLBAR (bottom actions)
+   ============================================================ */
+
+.report-toolbar {
+    max-width: 900px;
+    margin: 0 auto 48px auto;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.report-toolbar button,
+.report-toolbar .stButton > button {
+    font-size: 13px;
+    padding: 6px 16px;
+    background: #FFFFFF;
+    color: #2C3338;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.report-toolbar button:hover,
+.report-toolbar .stButton > button:hover {
+    border-color: #2D5A4B;
+    color: #2D5A4B;
+    background: #FAF9F7;
+}
+
+/* ============================================================
+   11. CARD COMPONENT (input areas, info boxes)
+   ============================================================ */
+
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+}
+
+.card-accent {
+    background: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-left: 4px solid #2D5A4B;
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+}
+
+/* ============================================================
+   12. MODULE CARD (homepage grid)
+   ============================================================ */
+
+.module-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin-bottom: 12px;
+    transition: border-color 0.15s ease;
+}
+
+.module-card:hover {
+    border-color: #2D5A4B;
+}
+
+.module-card-title {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2C3338;
+    margin: 0 0 8px 0;
+}
+
+.module-card-desc {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.6;
+    margin: 0 0 14px 0;
+}
+
+.module-card-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2D5A4B;
+    text-decoration: none;
+}
+
+.module-card-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ============================================================
+   13. PAGE TITLE SECTIONS
+   ============================================================ */
+
+.page-title-section {
+    margin-bottom: 24px;
+    padding-bottom: 0;
+}
+
+.page-subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    color: #6B7280;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   14. EMPTY STATE GUIDE
+   ============================================================ */
+
+.guide-text {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.7;
+}
+
+.guide-text strong {
+    color: #2C3338;
+    font-weight: 600;
+}
+
+/* ============================================================
+   15. FRAMEWORK OVERVIEW (homepage seven dimensions)
+   ============================================================ */
+
+.framework-section {
+    background: #FFFFFF;
+    border: 1px solid #E2E0DA;
+    border-left: 4px solid #2D5A4B;
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin: 32px 0;
+}
+
+.framework-title {
+    font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3338;
+    margin-bottom: 20px;
+    letter-spacing: 0.03em;
+}
+
+.dim-label {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: #2C3338;
+    text-align: center;
+    margin-bottom: 2px;
+}
+
+.dim-desc {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+    color: #6B7280;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   16. HOMEPAGE HERO
+   ============================================================ */
+
+.hero-title {
+    font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: #2C3338;
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+}
+
+.hero-subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    color: #6B7280;
+    font-weight: 400;
+    margin-bottom: 32px;
+}
+
+/* ============================================================
+   17. FOOTER / METHODOLOGY NOTE
+   ============================================================ */
+
+.methodology-note {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+    color: #9CA3AF;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid #E2E0DA;
+}
+
+/* ============================================================
+   18. SIDEBAR KNOWLEDGE BASE LINKS
+   ============================================================ */
+
+.sidebar-kb-title {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 24px;
+    margin-bottom: 8px;
+}
+
+.sidebar-kb-list {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #6B7280;
+}
+
+.sidebar-kb-list a {
+    color: #2C3338;
+    text-decoration: none;
+}
+
+.sidebar-kb-list a:hover {
+    color: #2D5A4B;
+}
+
+/* ============================================================
+   19. SPINNER OVERRIDE
+   ============================================================ */
+
+.stSpinner {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+/* ============================================================
+   20. RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .report-container {
+        padding: 20px 16px;
+        margin: 16px 0;
+        border-left: 3px solid #2D5A4B;
+    }
+
+    .report-body {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .report-body h2 {
+        font-size: 18px;
+    }
+
+    .framework-section {
+        padding: 20px 18px;
+    }
+
+    .hero-title {
+        font-size: 28px;
+    }
+}
