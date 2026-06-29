@@ -11,6 +11,7 @@ import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
 from app.utils.style import inject_css
+from app.utils.search import search_for_industry
 
 st.set_page_config(page_title="行业分析 · 经纬", page_icon="◈", layout="wide")
 
@@ -72,7 +73,11 @@ if start_btn and industry_name:
 - 优先使用书中推荐的资源：国家统计局、行业协会官网、券商研报、专业数据库、公司招股书/年报
 """
 
-    with st.spinner(f"正在检索「{industry_name}」行业公开数据并执行结构分析..."):
+    # 联网搜索最新数据
+    search_results = search_for_industry(industry_name)
+    system_prompt += f"\n\n## 联网搜索结果（最新公开数据）\n\n{search_results}\n\n请基于以上搜索结果，结合方法论框架进行分析。"
+
+    with st.spinner(f"正在联网搜索「{industry_name}」行业最新数据并执行分析..."):
         try:
             response = ask_claude(system_prompt, f"请分析「{industry_name}」行业")
 

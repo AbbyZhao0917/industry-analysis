@@ -9,6 +9,7 @@ import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
 from app.utils.style import inject_css
+from app.utils.search import search_web
 
 st.set_page_config(page_title="研究工具箱 · 经纬", page_icon="◈", layout="wide")
 
@@ -64,6 +65,10 @@ if start_btn and research_question:
 - 国家统计局社零数据：https://www.stats.gov.cn/...
 - CCFA便利店报告：https://www.ccfa.org.cn/...
 """
+
+    # 联网搜索
+    search_results = search_web(research_question)
+    system_prompt += f"\n\n## 联网搜索结果（最新公开数据）\n\n{search_results}\n\n请基于以上搜索结果，结合方法论框架进行分析。"
 
     with st.spinner("正在生成研究方案..."):
         try:

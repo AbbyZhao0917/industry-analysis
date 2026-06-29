@@ -9,6 +9,7 @@ import streamlit as st
 from app.services.claude_client import ask_claude
 from app.utils.knowledge import build_system_context
 from app.utils.style import inject_css
+from app.utils.search import search_for_industry
 
 st.set_page_config(page_title="行业对比 · 经纬", page_icon="◈", layout="wide")
 
@@ -57,7 +58,12 @@ if start_btn and industry_a and industry_b:
 每条数据必须标注具体来源URL和时间
 """
 
-    with st.spinner(f"正在检索「{industry_a}」与「{industry_b}」行业公开数据并执行对比分析..."):
+    # 联网搜索最新数据
+    search_results_a = search_for_industry(industry_a)
+    search_results_b = search_for_industry(industry_b)
+    system_prompt += f"\n\n## 联网搜索结果（最新公开数据）\n\n### {industry_a}\n\n{search_results_a}\n\n### {industry_b}\n\n{search_results_b}\n\n请基于以上搜索结果，结合方法论框架进行分析。"
+
+    with st.spinner(f"正在联网搜索「{industry_a}」与「{industry_b}」行业最新数据..."):
         try:
             response = ask_claude(system_prompt, f"请对比分析「{industry_a}」和「{industry_b}」两个行业")
             html_body = markdown.markdown(response, extensions=['tables', 'fenced_code'])
