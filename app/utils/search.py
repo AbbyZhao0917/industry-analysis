@@ -3,6 +3,7 @@ import os
 import re
 import time
 import requests
+from datetime import datetime
 from typing import Dict, List, Optional
 
 
@@ -98,7 +99,8 @@ def search_web(query: str, max_results: int = 5) -> str:
         results = []
 
     if not results:
-        return "（联网搜索不可用，以下数据来自模型训练知识。标注链接为已知权威来源格式，建议自行核验最新数据。）"
+        yr = str(datetime.now().year)
+        return f"（联网搜索不可用，以下数据来自模型训练知识。建议自行核验{yr}年最新数据。）"
 
     lines = []
     for i, r in enumerate(results, 1):
@@ -109,8 +111,10 @@ def search_web(query: str, max_results: int = 5) -> str:
 
 
 def search_for_industry(industry_name: str) -> str:
-    return search_web(f"{industry_name} 行业 市场规模 2025 2026")
+    yr = str(datetime.now().year)
+    return search_web(f"{industry_name} 行业 市场规模 {yr}")
 
 
 def search_for_company(company_name: str) -> str:
-    return search_web(f"{company_name} 财报 营收 经营数据 2025")
+    yr = str(datetime.now().year)
+    return search_web(f"{company_name} 财报 营收 经营数据 {yr}")
