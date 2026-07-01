@@ -687,3 +687,144 @@ hr, .stDivider {
         font-size: 28px;
     }
 }
+
+/* ============================================================
+   9. 搜索引擎式输入区
+   ============================================================ */
+
+.search-hero {
+    max-width: 720px;
+    margin: 32px auto 40px;
+    text-align: center;
+}
+
+/* 输入框放大 */
+.search-hero [data-testid="stTextInput"] input {
+    font-size: 18px !important;
+    padding: 16px 20px !important;
+    height: 56px !important;
+    border: 2px solid #E2E0DA !important;
+    border-radius: 12px !important;
+    background: #FFFFFF !important;
+    text-align: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-hero [data-testid="stTextInput"] input:focus {
+    border-color: #2D5A4B !important;
+    box-shadow: 0 0 0 3px rgba(45, 90, 75, 0.1) !important;
+    outline: none !important;
+}
+
+.search-hero [data-testid="stTextInput"] input::placeholder {
+    color: #B0B5B2;
+}
+
+/* 提示文字 */
+.search-hints {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #9CA3AF;
+}
+
+.search-hints code {
+    background: #F3F4F0;
+    color: #2D5A4B;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+}
+
+.search-hints span {
+    margin: 0 2px;
+}
+
+/* 按钮放在输入区内 */
+.search-hero [data-testid="stButton"] {
+    margin-top: 16px;
+}
+
+/* ============================================================
+   10. 左侧目录面板 (TOC)
+   ============================================================ */
+
+.toc-panel {
+    border-left: 4px solid #2D5A4B;
+    padding: 16px 0 16px 16px;
+    margin-top: 8px;
+}
+
+.toc-title {
+    font-family: Georgia, "Noto Serif CJK SC", serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3338;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E2E0DA;
+}
+
+/* TOC 按钮覆盖 */
+.toc-panel .stButton {
+    margin-bottom: 4px;
+}
+
+.toc-panel .stButton > button {
+    font-size: 13px !important;
+    padding: 7px 12px !important;
+    text-align: left !important;
+    border-radius: 6px !important;
+    border: 1px solid #E2E0DA !important;
+    background: #FFFFFF !important;
+    color: #2C3338 !important;
+    transition: all 0.15s ease;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.toc-panel .stButton > button:hover {
+    border-color: #2D5A4B !important;
+    background: #F5F7F5 !important;
+}
+
+/* 当前激活的 TOC 按钮 */
+.toc-panel .stButton > button[kind="primary"] {
+    border-color: #2D5A4B !important;
+    background: #2D5A4B !important;
+    color: #FFFFFF !important;
+}
+
+/* ============================================================
+   11. 报告中的图表
+   ============================================================ */
+
+.report-chart {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 20px 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* 图表渲染失败时的回退代码块 */
+.chart-fallback {
+    background: #F8F7F5;
+    border: 1px solid #E2E0DA;
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 13px;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    color: #6B7280;
+    overflow-x: auto;
+    margin: 16px 0;
+}
+
+/* ============================================================
+   12. 首页智能分析卡片突出样式
+   ============================================================ */
+
+.module-card-featured {
+    border-left: 4px solid #2D5A4B;
+}

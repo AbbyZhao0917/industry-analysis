@@ -46,41 +46,32 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- 六模块卡片 ----
-col1, col2, col3 = st.columns(3)
+# ---- 五模块卡片 ----
+col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    <div class="module-card">
-        <div class="module-card-title">行业分析</div>
+    <div class="module-card module-card-featured">
+        <div class="module-card-title">智能分析</div>
         <div class="module-card-desc">
-            输入行业名称，自动检索最新公开数据，按七维度框架（可行性 · 规模性 · 防守性 · 盈利性 · 估值 · 外部因素 · 景气度）输出完整研究报告。
+            一个搜索框覆盖全部分析场景。输入行业或企业名称，自动识别类型、选择框架、检索最新数据。
+            对比分析用 <code>vs</code> 隔开，支持行业vs行业、企业vs企业、企业vs行业三种模式。
         </div>
-        <a class="module-card-link" href="/行业分析">进入模块</a>
+        <a class="module-card-link" href="/智能分析">进入模块</a>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
     <div class="module-card">
-        <div class="module-card-title">行业对比</div>
+        <div class="module-card-title">资源库</div>
         <div class="module-card-desc">
-            两个行业七维度并排对比：生命周期定位、可行性、规模性、防守性、盈利性、估值、外部因素、景气度。差异高亮，选择建议。
+            书中推荐的各类研究资源链接：统计机构、券商研报、数据库、行业协会、另类数据等。按类别整理，含收费标签。
         </div>
-        <a class="module-card-link" href="/行业对比">进入模块</a>
+        <a class="module-card-link" href="/资源库">进入模块</a>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("""
-    <div class="module-card">
-        <div class="module-card-title">企业分析</div>
-        <div class="module-card-desc">
-            输入企业名称，输出商业模式画布、UE 单位经济模型、护城河评分卡、竞争定位与估值框架。对照行业基准标注。
-        </div>
-        <a class="module-card-link" href="/企业分析">进入模块</a>
-    </div>
-    """, unsafe_allow_html=True)
-
     st.markdown("""
     <div class="module-card">
         <div class="module-card-title">研究工具箱</div>
@@ -91,24 +82,13 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-with col3:
     st.markdown("""
     <div class="module-card">
-        <div class="module-card-title">企业对比</div>
+        <div class="module-card-title">名词解释</div>
         <div class="module-card-desc">
-            两家企业并排 PK：商业模式画布、UE 指标、护城河评分、估值框架、竞争定位。综合判效与选择建议。
+            书中附录术语速查：涵盖商业模式、财务分析、估值方法、行业研究等领域共75+核心术语的简明解释。
         </div>
-        <a class="module-card-link" href="/企业对比">进入模块</a>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="module-card">
-        <div class="module-card-title">报告中心</div>
-        <div class="module-card-desc">
-            历史分析记录归档、报告模板管理。支持导出 Markdown / Word / PDF 格式。
-        </div>
-        <a class="module-card-link" href="/报告中心">进入模块</a>
+        <a class="module-card-link" href="/名词解释">进入模块</a>
     </div>
     """, unsafe_allow_html=True)
 
