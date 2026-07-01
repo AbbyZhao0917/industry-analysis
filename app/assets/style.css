@@ -127,15 +127,6 @@ h1 {
     display: none;
 }
 
-/* Rename "main" → "首页" */
-[data-testid="stSidebarNav"] a:first-of-type {
-    font-size: 0;
-}
-[data-testid="stSidebarNav"] a:first-of-type::after {
-    content: "首页";
-    font-size: 14px;
-}
-
 /* ============================================================
    4. BUTTONS
    ============================================================ */

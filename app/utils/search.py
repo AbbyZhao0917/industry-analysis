@@ -3,10 +3,10 @@ import os
 import re
 import time
 import requests
-from typing import List, Dict
+from typing import Dict, List, Optional
 
 
-def _get_proxies() -> dict | None:
+def _get_proxies() -> Optional[Dict]:
     """读取代理配置"""
     proxy = os.getenv("HTTP_PROXY") or os.getenv("http_proxy")
     if proxy:

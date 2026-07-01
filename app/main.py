@@ -145,3 +145,20 @@ st.markdown(
     '</div>',
     unsafe_allow_html=True,
 )
+
+# JS: 侧边栏 "main" → "首页"
+st.markdown("""
+<script>
+(function() {
+    const nav = document.querySelector('[data-testid=\"stSidebarNav\"]');
+    if (!nav) return;
+    const links = nav.querySelectorAll('a');
+    links.forEach(function(a) {
+        const span = a.querySelector('span');
+        if (span && span.textContent.trim() === 'main') {
+            span.textContent = '首页';
+        }
+    });
+})();
+</script>
+""", unsafe_allow_html=True)
