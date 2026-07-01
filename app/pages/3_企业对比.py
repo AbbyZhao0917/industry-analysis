@@ -24,14 +24,12 @@ st.markdown(
 )
 
 # ---- 输入区 ----
-st.markdown('<div class="card">', unsafe_allow_html=True)
 col_a, col_b = st.columns(2)
 with col_a:
     company_a = st.text_input("企业 A", placeholder="例如：盒马", label_visibility="collapsed")
 with col_b:
     company_b = st.text_input("企业 B", placeholder="例如：叮咚买菜", label_visibility="collapsed")
 start_btn = st.button("开始对比", type="primary", use_container_width=True)
-st.markdown("</div>", unsafe_allow_html=True)
 
 # ---- 分析执行 ----
 if start_btn and company_a and company_b:
@@ -56,8 +54,12 @@ if start_btn and company_a and company_b:
 - 核心差异总结
 - 选择建议
 
-### 数据来源强制要求
-每条数据必须标注具体来源URL和时间
+### 数据来源强制要求（极其重要）
+- **每条数据必须用 Markdown 链接语法标注来源**：`[来源名称](完整URL)`
+- 格式示例：「2025年营收382亿[（公司年报）](https://example.com)」
+- 搜索结果中标注的 URL 直接用于链接
+- 不得使用"据XX机构数据"等模糊表述，必须给出可点击链接
+- 优先使用书中推荐的资源类型：统计机构官网、行业协会官网、券商研报、公司招股书/年报
 """
 
     # 联网搜索最新数据
@@ -68,8 +70,12 @@ if start_btn and company_a and company_b:
     with st.spinner(f"正在联网搜索「{company_a}」与「{company_b}」最新数据..."):
         try:
             response = ask_claude(system_prompt, f"请对比分析「{company_a}」和「{company_b}」两家企业")
-            html_body = markdown.markdown(response, extensions=['tables', 'fenced_code'])
+            import re
 
+            # 按 H2 标题拆分
+            sections = re.split(r'\n(?=## )', response)
+
+            # 报告容器开头
             st.markdown(f"""
             <div class="report-container">
                 <div class="report-header">
@@ -79,11 +85,29 @@ if start_btn and company_a and company_b:
                         以下内容基于公开数据生成，仅供参考
                     </div>
                 </div>
-                <div class="report-body">
-                    {html_body}
-                </div>
-            </div>
             """, unsafe_allow_html=True)
+
+            # 第一段是概述，直接展示
+            if sections:
+                first = markdown.markdown(sections[0], extensions=['tables', 'fenced_code'])
+                st.markdown(f'<div class="report-body">{first}</div>', unsafe_allow_html=True)
+
+            # 后续每段一个 expander
+            for sec in sections[1:]:
+                title_line = sec.strip().split('\n')[0]
+                title = title_line.lstrip('#').strip()
+                body_html = markdown.markdown(sec, extensions=['tables', 'fenced_code'])
+                with st.expander(title, expanded=False):
+                    st.markdown(f'<div class="report-body" style="margin-top: -12px;">{body_html}</div>', unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            st.download_button(
+                label="下载 Markdown 报告",
+                data=response,
+                file_name=f"{company_a}_vs_{company_b}_对比报告.md",
+                mime="text/markdown",
+            )
 
         except Exception as e:
             st.error(f"分析未能完成：{e}")

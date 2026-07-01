@@ -24,7 +24,6 @@ st.markdown(
 )
 
 # ---- 输入区 ----
-st.markdown('<div class="card">', unsafe_allow_html=True)
 
 research_question = st.text_area(
     "输入研究问题",
@@ -42,7 +41,6 @@ with col2:
     do_steps = st.checkbox("规划研究步骤", value=True)
 
 start_btn = st.button("开始规划", type="primary", use_container_width=True)
-st.markdown("</div>", unsafe_allow_html=True)
 
 # ---- 分析执行 ----
 if start_btn and research_question:
@@ -60,10 +58,9 @@ if start_btn and research_question:
 - AI工具建议：{"是" if do_ai else "否"}
 - 研究步骤规划（资讯料理法三阶段）：{"是" if do_steps else "否"}
 
-### 数据源推荐要求
-给出具体的来源名称和网址URL，不要只写类别。例如：
-- 国家统计局社零数据：https://www.stats.gov.cn/...
-- CCFA便利店报告：https://www.ccfa.org.cn/...
+### 数据来源要求
+- 推荐数据源时给出具体名称和可点击的 Markdown 链接：`[来源名称](URL)`
+- 不得只写类别名称（如"国家统计局"），必须附带网址
 """
 
     # 联网搜索
@@ -73,19 +70,43 @@ if start_btn and research_question:
     with st.spinner("正在生成研究方案..."):
         try:
             response = ask_claude(system_prompt, f"请为「{research_question}」提供研究方案")
-            html_body = markdown.markdown(response, extensions=['tables', 'fenced_code'])
+            import re
 
+            # 按 H2 标题拆分
+            sections = re.split(r'\n(?=## )', response)
+
+            # 报告容器开头
             st.markdown(f"""
             <div class="report-container">
                 <div class="report-header">
                     <div class="report-title">研究方案</div>
                     <div class="report-meta">研究问题：{research_question}</div>
                 </div>
-                <div class="report-body">
-                    {html_body}
-                </div>
-            </div>
             """, unsafe_allow_html=True)
+
+            # 第一段是概述，直接展示
+            if sections:
+                first = markdown.markdown(sections[0], extensions=['tables', 'fenced_code'])
+                st.markdown(f'<div class="report-body">{first}</div>', unsafe_allow_html=True)
+
+            # 后续每段一个 expander
+            for sec in sections[1:]:
+                title_line = sec.strip().split('\n')[0]
+                title = title_line.lstrip('#').strip()
+                body_html = markdown.markdown(sec, extensions=['tables', 'fenced_code'])
+                with st.expander(title, expanded=False):
+                    st.markdown(f'<div class="report-body" style="margin-top: -12px;">{body_html}</div>', unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # 用研究问题截短作为文件名
+            short_name = research_question[:20].replace("/", "_").replace("？", "").replace("?", "")
+            st.download_button(
+                label="下载 Markdown 报告",
+                data=response,
+                file_name=f"{short_name}_研究方案.md",
+                mime="text/markdown",
+            )
 
         except Exception as e:
             st.error(f"研究方案生成失败：{e}")
