@@ -40,3 +40,19 @@ def ask_claude(system_prompt: str, user_message: str, max_tokens: int = 8000) ->
         messages=[{"role": "user", "content": user_message}],
     )
     return message.content[0].text
+
+
+def ask_claude_stream(system_prompt: str, user_message: str, max_tokens: int = 8000):
+    """
+    流式请求 Claude API，逐步返回文本块（generator）。
+    用法：for chunk in ask_claude_stream(...): yield chunk
+    """
+    client = get_client()
+    with client.messages.stream(
+        model=get_model(),
+        max_tokens=max_tokens,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_message}],
+    ) as stream:
+        for text in stream.text_stream:
+            yield text

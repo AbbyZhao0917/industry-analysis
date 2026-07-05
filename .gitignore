@@ -20,3 +20,7 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 生成的报告
+reports/
+*.md.report

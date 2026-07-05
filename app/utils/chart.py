@@ -38,16 +38,52 @@ plt.rcParams["axes.unicode_minus"] = False
 # ---- 主接口 ----
 
 def parse_charts(text: str) -> List[Dict]:
-    """从报告文本中提取 ```chart 代码块"""
-    pattern = r'```chart\s*\n(.*?)\n```'
+    """从报告文本中提取 ```chart 代码块，容忍格式偏差"""
+    # 允许 ```chart 后无换行、``` 前无换行、缩进等变化
+    pattern = r'```chart\s*\n?(.*?)\n?\s*```'
     charts = []
     for match in re.finditer(pattern, text, re.DOTALL):
-        try:
-            data = json.loads(match.group(1))
+        raw = match.group(1).strip()
+        # 尝试修复常见 JSON 问题：截断的括号、未闭合的字符串
+        data = _try_parse_json(raw)
+        if data:
             charts.append(data)
+    return charts
+
+
+def _try_parse_json(raw: str) -> Optional[Dict]:
+    """尝试解析 chart JSON，失败时尝试自动修复"""
+    # 直接尝试
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict) and "type" in data:
+            return data
+    except json.JSONDecodeError:
+        pass
+
+    # 修复1：补全缺失的尾部 }]
+    for suffix in ["}", "}]", '"}', "]", '"]}']:
+        try:
+            data = json.loads(raw + suffix)
+            if isinstance(data, dict) and "type" in data:
+                return data
         except json.JSONDecodeError:
             continue
-    return charts
+
+    # 修复2：如果 title 值中有未闭合的括号，尝试补全
+    import re as _re
+    title_match = _re.search(r'"title":\s*"([^"]*)$', raw)
+    if title_match:
+        # title 值未闭合，尝试补上引号和后续结构
+        fixed = raw + '", "labels": [], "values": []}'
+        try:
+            data = json.loads(fixed)
+            if isinstance(data, dict) and "type" in data:
+                return data
+        except json.JSONDecodeError:
+            pass
+
+    return None
 
 
 def render_chart(chart_data: Dict) -> Optional[str]:
@@ -168,20 +204,24 @@ def _render_radar(ax, labels, values, colors):
 def embed_charts(html_body: str) -> str:
     """
     在 HTML 中查找 ```chart 代码块并替换为渲染后的 <img>。
-    如果渲染失败，保留代码块原文（用 <pre> 包裹展示）。
+    如果渲染失败，用折叠的 <details> 展示原始 JSON，方便调试。
     """
+    pattern = r'```chart\s*\n?(.*?)\n?\s*```'
+
     def _replace(match):
-        raw = match.group(0)
-        json_str = match.group(1)
-        try:
-            data = json.loads(json_str)
+        raw = match.group(1).strip()
+        data = _try_parse_json(raw)
+        if data:
             img_tag = render_chart(data)
             if img_tag:
                 return img_tag
-        except json.JSONDecodeError:
-            pass
-        # 回退：展示代码
-        escaped = (json_str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-        return f'<pre class="chart-fallback"><code>{escaped}</code></pre>'
+        # 回退：展示代码（可折叠）
+        escaped = raw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        return (
+            f'<details class="chart-fallback">'
+            f'<summary>📊 图表数据（解析失败，点击查看原始 JSON）</summary>'
+            f'<pre><code>{escaped}</code></pre>'
+            f'</details>'
+        )
 
-    return re.sub(r'```chart\s*\n(.*?)\n```', _replace, html_body, flags=re.DOTALL)
+    return re.sub(pattern, _replace, html_body, flags=re.DOTALL)
