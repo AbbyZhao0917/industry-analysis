@@ -10,8 +10,12 @@ import streamlit as st
 from app.services.claude_client import ask_claude, ask_claude_stream
 from app.utils.knowledge import build_system_context
 from app.utils.style import inject_css
-from app.utils.search import search_by_dimensions, search_authoritative
-from app.utils.chart import parse_charts, embed_charts
+from app.utils.search import (
+    search_authoritative, search_web,
+    INDUSTRY_DIMENSIONS, COMPANY_DIMENSIONS, _build_dimension_queries,
+)
+from app.utils.chart import parse_charts, embed_charts, preprocess_charts, replace_placeholders, render_chart, render_chart_to_bytesio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 st.set_page_config(page_title="经纬 · 行业洞察", page_icon="◈", layout="wide")
 
@@ -258,17 +262,228 @@ def display_report(response: str, display_title: str):
     with col_content:
         idx = st.session_state[toc_key]
         raw_section = sections[idx]
+        # 在 markdown 前提取 chart 块并渲染
+        raw_section, chart_images = preprocess_charts(raw_section)
         html_body = markdown.markdown(raw_section, extensions=['tables', 'fenced_code'])
-        html_body = embed_charts(html_body)
+        html_body = replace_placeholders(html_body, chart_images)
         st.markdown(f'<div class="report-body">{html_body}</div>', unsafe_allow_html=True)
 
-    # 下载按钮
-    st.download_button(
-        label="下载 Markdown 报告",
-        data=response,
-        file_name=f"{display_title.replace(' ', '_')}_分析报告.md",
-        mime="text/markdown",
-    )
+    # ---- 导出按钮（Word / PDF） ----
+    _render_download_buttons(response, display_title)
+
+
+# ============================================================
+# 导出工具：Word / PDF
+# ============================================================
+
+def _export_docx(markdown_text: str) -> bytes:
+    """将报告（含 chart）导出为 .docx bytes"""
+    from docx import Document
+    from docx.shared import Inches, Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    doc = Document()
+
+    # 设置默认字体
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'PingFang SC'
+    font.size = Pt(10.5)
+
+    lines = markdown_text.split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # chart 代码块
+        if line.strip().startswith('```chart'):
+            i += 1
+            chart_lines = []
+            while i < len(lines) and not lines[i].strip().startswith('```'):
+                chart_lines.append(lines[i])
+                i += 1
+            raw_json = ''.join(chart_lines).strip()
+            if raw_json:
+                from app.utils.chart import _try_parse_json
+                data = _try_parse_json(raw_json)
+                if data:
+                    png_bytes = render_chart_to_bytesio(data)
+                    if png_bytes:
+                        from io import BytesIO
+                        doc.add_picture(BytesIO(png_bytes), width=Inches(5.5))
+                        doc.add_paragraph()  # 空行
+            i += 1  # 跳过结束 ```
+            continue
+
+        # 标题
+        if line.startswith('## '):
+            p = doc.add_heading(line.lstrip('#').strip(), level=2)
+            for run in p.runs:
+                run.font.color.rgb = RGBColor(0x2C, 0x33, 0x38)
+        elif line.startswith('# '):
+            p = doc.add_heading(line.lstrip('#').strip(), level=1)
+            for run in p.runs:
+                run.font.color.rgb = RGBColor(0x2C, 0x33, 0x38)
+        # 表格行（以 | 开头且包含 --- 分隔行则跳过）
+        elif line.strip().startswith('|') and line.strip().endswith('|'):
+            # 收集表格
+            table_rows = []
+            while i < len(lines) and lines[i].strip().startswith('|') and lines[i].strip().endswith('|'):
+                table_rows.append(lines[i].strip())
+                i += 1
+            # 跳过分隔行
+            if len(table_rows) >= 2 and re.match(r'^[\s|:-]+$', table_rows[1]):
+                header = [c.strip() for c in table_rows[0].split('|')[1:-1]]
+                data_rows = []
+                for row in table_rows[2:]:
+                    cells = [c.strip() for c in row.split('|')[1:-1]]
+                    if cells:
+                        data_rows.append(cells)
+                if header and data_rows:
+                    table = doc.add_table(rows=1 + len(data_rows), cols=len(header))
+                    table.style = 'Light Grid Accent 1'
+                    for j, h in enumerate(header):
+                        cell = table.rows[0].cells[j]
+                        cell.text = h
+                    for r_idx, row_data in enumerate(data_rows):
+                        for c_idx, val in enumerate(row_data):
+                            if c_idx < len(header):
+                                table.rows[r_idx + 1].cells[c_idx].text = val
+                    doc.add_paragraph()
+            continue
+
+        # 普通段落
+        elif line.strip():
+            p = doc.add_paragraph(line.strip())
+
+        i += 1
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf.read()
+
+
+def _export_html(markdown_text: str) -> str:
+    """将报告（含 chart）导出为独立可分享的 HTML 字符串，超链接可直接点击"""
+    processed, chart_images = preprocess_charts(markdown_text)
+    html_body = markdown.markdown(processed, extensions=['tables', 'fenced_code'])
+    html_body = replace_placeholders(html_body, chart_images)
+
+    full_html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经纬 · 行业洞察报告</title>
+<style>
+  body {{ font-family: 'PingFang SC', 'Heiti SC', -apple-system, sans-serif; font-size: 15px; line-height: 1.8; color: #2C3338; max-width: 900px; margin: 0 auto; padding: 32px 24px; background: #FAF9F7; }}
+  h1 {{ font-size: 24px; color: #1F3D33; margin-top: 32px; }}
+  h2 {{ font-size: 20px; color: #2D5A4B; margin-top: 28px; border-bottom: 1px solid #E2E0DA; padding-bottom: 6px; }}
+  h3 {{ font-size: 17px; color: #2C3338; margin-top: 24px; }}
+  a {{ color: #2D5A4B; text-decoration: underline; }}
+  a:hover {{ color: #1F3D33; }}
+  table {{ border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }}
+  th, td {{ border: 1px solid #D1D5DB; padding: 8px 10px; text-align: left; }}
+  th {{ background-color: #F3F4F6; font-weight: 600; }}
+  img {{ max-width: 100%; height: auto; margin: 16px 0; display: block; }}
+  code {{ background: #F3F4F6; padding: 2px 6px; border-radius: 3px; font-size: 13px; }}
+  pre {{ background: #F9FAFB; padding: 12px 16px; border-radius: 4px; overflow-x: auto; border: 1px solid #E2E0DA; }}
+  .report-footer {{ margin-top: 48px; padding-top: 16px; border-top: 1px solid #E2E0DA; font-size: 13px; color: #9CA3AF; text-align: center; }}
+</style>
+</head>
+<body>
+{html_body}
+<div class="report-footer">由 经纬 · 行业洞察 自动生成 · {datetime.now().strftime("%Y-%m-%d")}</div>
+</body>
+</html>"""
+    return full_html
+
+
+def _export_pdf(markdown_text: str) -> bytes:
+    """将报告（含 chart）导出为 PDF bytes"""
+    # 先预处理 chart 块：渲染为 HTML img 标签
+    processed, chart_images = preprocess_charts(markdown_text)
+    # markdown → HTML
+    html_body = markdown.markdown(processed, extensions=['tables', 'fenced_code'])
+    html_body = replace_placeholders(html_body, chart_images)
+
+    full_html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  @page {{ size: A4; margin: 2cm; }}
+  body {{ font-family: 'PingFang SC', 'Heiti SC', sans-serif; font-size: 12pt; line-height: 1.7; color: #2C3338; }}
+  h1 {{ font-size: 20pt; color: #1F3D33; margin-top: 24pt; }}
+  h2 {{ font-size: 16pt; color: #2D5A4B; margin-top: 20pt; border-bottom: 1px solid #E2E0DA; padding-bottom: 4pt; }}
+  h3 {{ font-size: 14pt; color: #2C3338; margin-top: 16pt; }}
+  table {{ border-collapse: collapse; width: 100%; margin: 12pt 0; font-size: 10pt; }}
+  th, td {{ border: 1px solid #D1D5DB; padding: 6pt 8pt; text-align: left; }}
+  th {{ background-color: #F3F4F6; font-weight: 600; }}
+  img {{ max-width: 100%; height: auto; margin: 12pt 0; }}
+  code {{ background: #F3F4F6; padding: 1pt 4pt; border-radius: 3pt; font-size: 10pt; }}
+  pre {{ background: #F9FAFB; padding: 10pt; border-radius: 4pt; overflow-x: auto; }}
+</style>
+</head>
+<body>
+{html_body}
+</body>
+</html>"""
+
+    import weasyprint
+    buf = io.BytesIO()
+    weasyprint.HTML(string=full_html).write_pdf(buf)
+    buf.seek(0)
+    return buf.read()
+
+
+def _render_download_buttons(markdown_text: str, display_title: str):
+    """渲染 HTML + Word + PDF 三个下载按钮"""
+    safe_name = re.sub(r'[\\/:*?"<>|]', '_', display_title)
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        with st.spinner("生成 HTML 中..."):
+            try:
+                html_str = _export_html(markdown_text)
+                st.download_button(
+                    label="🌐 分享为 HTML",
+                    data=html_str,
+                    file_name=f"{safe_name}_分析报告.html",
+                    mime="text/html",
+                    use_container_width=True,
+                )
+            except Exception as e:
+                st.error(f"HTML 导出失败：{e}")
+
+    with col2:
+        with st.spinner("生成 Word 中..."):
+            try:
+                docx_bytes = _export_docx(markdown_text)
+                st.download_button(
+                    label="📄 下载 Word 报告",
+                    data=docx_bytes,
+                    file_name=f"{safe_name}_分析报告.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True,
+                )
+            except Exception as e:
+                st.error(f"Word 导出失败：{e}")
+
+    with col3:
+        with st.spinner("生成 PDF 中..."):
+            try:
+                pdf_bytes = _export_pdf(markdown_text)
+                st.download_button(
+                    label="📕 下载 PDF 报告",
+                    data=pdf_bytes,
+                    file_name=f"{safe_name}_分析报告.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+            except Exception as e:
+                st.error(f"PDF 导出失败：{e}")
 
 
 # ============================================================
@@ -279,55 +494,92 @@ if start_btn and query:
     mode, a, b, display_title = parse_query(query)
     system_prompt = build_prompt(mode, a, b)
 
-    # ---- Step 1: 多维度并行搜索 ----
+    # ---- Step 1: 多维度并行搜索（逐维度进度展示） ----
+    def _search_with_progress(entity_name: str, entity_label: str, is_industry: bool):
+        """逐维度搜索并实时展示进度，返回 (search_block, result_count)"""
+        dims = INDUSTRY_DIMENSIONS if is_industry else COMPANY_DIMENSIONS
+        # 判断实体类型用于权威源搜索
+        queries = _build_dimension_queries(entity_name, dims)
+
+        total = len(queries)
+        dim_results = {}
+        progress_placeholder = st.empty()
+
+        with ThreadPoolExecutor(max_workers=total) as pool:
+            futures = {pool.submit(search_web, q, 3): name for name, q in queries}
+            done = 0
+            done_names = []
+            for future in as_completed(futures):
+                name = futures[future]
+                try:
+                    dim_results[name] = future.result()
+                except Exception:
+                    dim_results[name] = "（搜索失败）"
+                done += 1
+                done_names.append(name)
+                progress_placeholder.markdown(
+                    f"🔄 {entity_label} 维度搜索：{done}/{total} — "
+                    + " · ".join(f"✅{n}" for n in done_names)
+                )
+
+        # 组装维度搜索结果
+        lines = [f"## 多维度联网搜索结果：{entity_name}"]
+        for dim_name, _ in dims:
+            content = dim_results.get(dim_name, "（搜索失败）")
+            lines.append(f"\n### {dim_name}\n{content}")
+        dim_block = "\n\n".join(lines)
+
+        progress_placeholder.markdown(
+            f"✅ {entity_label} 维度搜索完成（{total}/{total}），开始权威源定向搜索..."
+        )
+
+        # 权威源定向搜索（在独立线程池中运行，不阻塞 UI，但只能等结果）
+        auth_block = search_authoritative(entity_name, is_industry)
+
+        search_block = dim_block + "\n\n" + auth_block
+        result_count = search_block.count("（来源：")
+        progress_placeholder.markdown(
+            f"✅ {entity_label} 搜索完成：{result_count} 条结果（含权威源）"
+        )
+        return search_block, result_count
+
     with st.status("🔍 正在多维度搜索...", expanded=True) as search_status:
         st.write(f"**搜索对象**：{display_title}")
         dim_list = "市场规模 · 竞争格局 · 商业模式 · 政策监管 · 技术创新 · 投融资 · 风险挑战"
         st.write(f"**覆盖维度**：{dim_list}")
 
-        # 并行：7维度搜索 + 权威源定向搜索
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            future_dims = pool.submit(search_by_dimensions, a, True)
-            future_auth = pool.submit(search_authoritative, a, True)
-            search_a = future_dims.result()
-            auth_a = future_auth.result()
+        # A 路搜索
+        search_a, count_a = _search_with_progress(a, a, True)
 
         search_b = ""
         auth_b = ""
+        count_b = 0
         if b:
-            with ThreadPoolExecutor(max_workers=2) as pool:
-                future_dims_b = pool.submit(search_by_dimensions, b, True)
-                future_auth_b = pool.submit(search_authoritative, b, True)
-                search_b = future_dims_b.result()
-                auth_b = future_auth_b.result()
+            search_b, count_b = _search_with_progress(b, b, True)
 
-        # 组装搜索结果：通用搜索 + 权威源定向
-        search_block = search_a + "\n\n" + auth_a
+        search_block = search_a
         if b:
-            search_block += "\n\n" + search_b + "\n\n" + auth_b
+            search_block += "\n\n" + search_b
 
-        result_count = search_block.count("（来源：")
-        st.write(f"**获取结果**：约 {result_count} 条（含权威源定向检索）")
-        search_status.update(label=f"✅ 搜索完成（7维度 + 权威源定向，约 {result_count} 条结果）", state="complete")
+        total_count = count_a + count_b
+        search_status.update(
+            label=f"✅ 搜索完成（7维度 + 权威源定向，约 {total_count} 条结果）",
+            state="complete",
+        )
 
-    # ---- Step 2: 流式生成报告 ----
+    # ---- Step 2: 流式生成报告（全量展示，不截断） ----
     full_report = ""
     system_prompt += f"\n\n{search_block}\n\n请基于以上搜索结果，结合方法论框架进行分析。优先使用搜索结果中的最新数据。"
 
     with st.status("✍️ 正在生成报告...", expanded=True) as report_status:
-        report_placeholder = st.empty()
         try:
-            for chunk in ask_claude_stream(system_prompt, f"请分析：{display_title}"):
-                full_report += chunk
-                # 只显示最新 2000 字符避免 Streamlit 重绘过重
-                preview = full_report if len(full_report) <= 2000 else "…" + full_report[-2000:]
-                report_placeholder.markdown(preview + "▌")
+            full_report = st.write_stream(
+                ask_claude_stream(system_prompt, f"请分析：{display_title}")
+            )
         except Exception as e:
             st.error(f"报告生成失败：{e}")
             st.stop()
 
-        report_placeholder.markdown(full_report)
         char_count = len(full_report)
         report_status.update(label=f"✅ 报告生成完成（{char_count:,} 字符）", state="complete")
 
@@ -363,15 +615,13 @@ if start_btn and query:
 
     full_check = ""
     with st.status("🔎 正在事实校验（逐条比对搜索来源）...", expanded=True) as check_status:
-        check_placeholder = st.empty()
         try:
-            for chunk in ask_claude_stream(checker_prompt, "请执行事实校验，只输出表格。"):
-                full_check += chunk
-                check_placeholder.markdown(full_check + "▌")
+            full_check = st.write_stream(
+                ask_claude_stream(checker_prompt, "请执行事实校验，只输出表格。")
+            )
         except Exception as e:
             full_check = f"*事实校验未能完成：{e}*"
 
-        check_placeholder.markdown(full_check)
         check_status.update(label="✅ 事实校验完成", state="complete")
 
     # ---- 存储 & 跳转（校验结果插入报告的数据来源说明后） ----

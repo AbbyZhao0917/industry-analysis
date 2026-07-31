@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import markdown
 import streamlit as st
 from app.utils.style import inject_css
+from app.utils.chart import preprocess_charts, replace_placeholders
 
 st.set_page_config(page_title="报告中心 · 经纬", page_icon="◈", layout="wide")
 
@@ -48,7 +49,9 @@ if os.path.isdir(reports_dir):
             preview = content[:200].strip().replace("\n", " ") + "..."
 
             with st.expander(title):
-                html_body = markdown.markdown(content, extensions=['tables', 'fenced_code'])
+                raw, chart_images = preprocess_charts(content)
+                html_body = markdown.markdown(raw, extensions=['tables', 'fenced_code'])
+                html_body = replace_placeholders(html_body, chart_images)
                 st.markdown(html_body, unsafe_allow_html=True)
 else:
     st.markdown(
