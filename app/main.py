@@ -400,11 +400,9 @@ def _export_html(markdown_text: str) -> str:
     return full_html
 
 
-def _export_pdf(markdown_text: str) -> bytes:
-    """将报告（含 chart）导出为 PDF bytes"""
-    # 先预处理 chart 块：渲染为 HTML img 标签
+def _export_pdf(markdown_text: str) -> bytes | None:
+    """将报告（含 chart）导出为 PDF bytes；环境不支持时返回 None"""
     processed, chart_images = preprocess_charts(markdown_text)
-    # markdown → HTML
     html_body = markdown.markdown(processed, extensions=['tables', 'fenced_code'])
     html_body = replace_placeholders(html_body, chart_images)
 
@@ -431,11 +429,17 @@ def _export_pdf(markdown_text: str) -> bytes:
 </body>
 </html>"""
 
-    import weasyprint
-    buf = io.BytesIO()
-    weasyprint.HTML(string=full_html).write_pdf(buf)
-    buf.seek(0)
-    return buf.read()
+    try:
+        import weasyprint
+    except ImportError:
+        return None
+    try:
+        buf = io.BytesIO()
+        weasyprint.HTML(string=full_html).write_pdf(buf)
+        buf.seek(0)
+        return buf.read()
+    except Exception:
+        return None
 
 
 def _render_download_buttons(markdown_text: str, display_title: str):
@@ -475,13 +479,16 @@ def _render_download_buttons(markdown_text: str, display_title: str):
         with st.spinner("生成 PDF 中..."):
             try:
                 pdf_bytes = _export_pdf(markdown_text)
-                st.download_button(
-                    label="📕 下载 PDF 报告",
-                    data=pdf_bytes,
-                    file_name=f"{safe_name}_分析报告.pdf",
-                    mime="application/pdf",
-                    use_container_width=True,
-                )
+                if pdf_bytes:
+                    st.download_button(
+                        label="📕 下载 PDF 报告",
+                        data=pdf_bytes,
+                        file_name=f"{safe_name}_分析报告.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
+                else:
+                    st.info("ℹ️ PDF 导出当前环境暂不支持，请使用 HTML 或 Word 格式")
             except Exception as e:
                 st.error(f"PDF 导出失败：{e}")
 

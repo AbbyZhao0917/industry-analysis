@@ -126,6 +126,11 @@ _COMPANY_DIMENSIONS = [
 ]
 
 
+# 公开导出（供 main.py 逐维度进度展示使用）
+INDUSTRY_DIMENSIONS = _INDUSTRY_DIMENSIONS
+COMPANY_DIMENSIONS = _COMPANY_DIMENSIONS
+
+
 def _build_dimension_queries(entity_name: str, dimensions: list) -> list:
     """将维度定义转为完整的搜索 query 列表"""
     yr = str(datetime.now().year)
@@ -235,14 +240,26 @@ def search_authoritative(entity_name: str, is_industry: bool = True) -> str:
                         urls_to_scrape.append(url)
 
         unique_urls = list(dict.fromkeys(urls_to_scrape))[:3]  # 去重，最多3个
-        for j, url in enumerate(unique_urls):
+
+        # 并行抓取（3 个 URL 同时抓，而非逐个等待）
+        def _scrape_one(url, idx):
             try:
                 result = fc.scrape_url(url, formats=["markdown"])
                 md = result.markdown if hasattr(result, "markdown") else ""
                 if md and len(md) > 200:
-                    scraped_content.append(f"\n### 📄 权威源全文 #{j+1}: {url}\n{md[:3000]}")
+                    return f"\n### 📄 权威源全文 #{idx+1}: {url}\n{md[:3000]}"
             except Exception:
-                pass
+                return None
+
+        with ThreadPoolExecutor(max_workers=min(3, len(unique_urls))) as pool:
+            scrape_futures = {
+                pool.submit(_scrape_one, url, j): j
+                for j, url in enumerate(unique_urls)
+            }
+            for future in as_completed(scrape_futures):
+                result = future.result()
+                if result:
+                    scraped_content.append(result)
 
     # 组装输出
     lines = [f"## 🔬 权威源定向搜索结果：{entity_name}"]
